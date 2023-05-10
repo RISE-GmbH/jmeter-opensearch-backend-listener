@@ -86,6 +86,7 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
     private int buildNumber;
     private int bulkSize;
     private int esVersion;
+    private int distribution;
     private long timeoutMs;
 
     private static final TrustStrategy TRUST_ALL_STRATEGY = (chain, authType) -> true;
@@ -156,7 +157,9 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
                     context.getParameter(ES_AUTH_USER), context.getParameter(ES_AUTH_PWD),
                     context.getParameter(ES_AWS_ENDPOINT));
             this.sender.createIndex();
-            this.esVersion = sender.getElasticSearchVersion();
+            int[] queryResult = sender.getElasticSearchVersion();
+            this.esVersion = queryResult[0];
+            this.distribution = queryResult[1];
 
             checkTestMode(context.getParameter(ES_TEST_MODE));
             super.setupTest(context);
@@ -247,7 +250,7 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
 
         if (this.sender.getListSize() >= this.bulkSize) {
             try {
-                this.sender.sendRequest(this.esVersion);
+                this.sender.sendRequest(this.esVersion,this.distribution);
             } catch (Exception e) {
                 logger.error("Error occured while sending bulk request.", e);
             } finally {
@@ -259,7 +262,7 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
     @Override
     public void teardownTest(BackendListenerContext context) throws Exception {
         if (this.sender.getListSize() > 0) {
-            this.sender.sendRequest(this.esVersion);
+            this.sender.sendRequest(this.esVersion,this.distribution);
         }
         this.sender.closeConnection();
         super.teardownTest(context);

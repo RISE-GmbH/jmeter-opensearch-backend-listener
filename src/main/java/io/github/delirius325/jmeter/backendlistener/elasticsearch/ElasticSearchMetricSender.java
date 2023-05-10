@@ -96,9 +96,11 @@ public class ElasticSearchMetricSender {
         }
     }
     
-    public int getElasticSearchVersion() {
+    public int[] getElasticSearchVersion() {
+        int[] returnData = new int[2];
     	Request request = new Request("GET", "/" );
     	int elasticSearchVersion = -1;
+        int distribution = 2; // 1 = ElasticSearch, 2 = OpenSearch
     	 try {
              Response response = this.client.performRequest(setAuthorizationHeader(request));
              if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && logger.isErrorEnabled()) {
@@ -108,9 +110,13 @@ public class ElasticSearchMetricSender {
             	 String responseBody = EntityUtils.toString(response.getEntity());
      			 JSONObject elasticSearchConfig = new JSONObject(responseBody);
      			 JSONObject version  = (JSONObject) elasticSearchConfig.get("version");
+                 String distroType =  version.get("distribution").toString();
+                 if (distroType.toString() == "opensearch") {
+                    distribution = 2;
+                 }
      			 String elasticVersion =  version.get("number").toString();
      			 elasticSearchVersion = Integer.parseInt(elasticVersion.split("\\.")[0]);
-                 logger.info("ElasticSearch Version : "  + Integer.toString(elasticSearchVersion));
+                 logger.info("Distribution type is ElasticSearch=" + Integer.toString(distribution) + ") , Version : "  + Integer.toString(elasticSearchVersion));
              }
          } catch (Exception e) {
              if (logger.isErrorEnabled()) {
@@ -118,7 +124,9 @@ public class ElasticSearchMetricSender {
                  logger.error("ElasticSearch Backend Listener was unable to perform request to the ElasticSearch engine. Check your JMeter console for more info.");
              }
          }
-    	 return elasticSearchVersion;
+         returnData[0] = elasticSearchVersion;
+         returnData[1] = distribution;
+    	 return returnData;
     }
     
 
@@ -126,19 +134,24 @@ public class ElasticSearchMetricSender {
      * This method sends the ElasticSearch documents for each document present in the list (metricList). All is being
      * sent through the low-level ElasticSearch REST Client.
      */
-    public void sendRequest(int elasticSearchVersionPrefix) {
+    public void sendRequest(int elasticSearchVersionPrefix, int distribution) {
     	Request request;
     	StringBuilder bulkRequestBody = new StringBuilder();
     	String actionMetaData;
-    	if(elasticSearchVersionPrefix < 7) {
-    		 request = new Request("POST", "/" + this.esIndex + "/SampleResult/_bulk");
- 			 actionMetaData = String.format(SEND_BULK_REQUEST, this.esIndex, "SampleResult");
-    	}
-    	else {
-    		 request = new Request("POST", "/" + this.esIndex + "/_bulk");
-    		 actionMetaData = String.format(SEND_BULK_REQUEST, this.esIndex);
-    	}
-    		
+        if(distribution == 1) {
+            if(elasticSearchVersionPrefix < 7) {
+                request = new Request("POST", "/" + this.esIndex + "/SampleResult/_bulk");
+                actionMetaData = String.format(SEND_BULK_REQUEST, this.esIndex, "SampleResult");
+            }
+            else {
+                request = new Request("POST", "/" + this.esIndex + "/_bulk");
+                actionMetaData = String.format(SEND_BULK_REQUEST, this.esIndex);
+            }
+        }
+        else {
+            request = new Request("POST", "/" + this.esIndex + "/_bulk");
+            actionMetaData = String.format(SEND_BULK_REQUEST, this.esIndex);
+        }
         for (String metric : this.metricList) {
             bulkRequestBody.append(actionMetaData);
             bulkRequestBody.append(metric);

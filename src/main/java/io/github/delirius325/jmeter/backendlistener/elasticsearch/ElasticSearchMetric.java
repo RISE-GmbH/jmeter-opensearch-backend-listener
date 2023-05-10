@@ -97,6 +97,7 @@ public class ElasticSearchMetric {
 
         addAssertions();
         addElapsedTime();
+        addElapsedDuration();
         addCustomFields(context);
         parseHeadersAsJsonProps(this.allReqHeaders, this.allResHeaders);
 
@@ -149,6 +150,14 @@ public class ElasticSearchMetric {
         elapsedTime = getElapsedTime(false);
         if (elapsedTime != null)
             addFilteredJSON("ElapsedTime", elapsedTime.getTime());
+    }
+
+    /**
+     * This method adds the ElapsedDuration in seconds.
+     */
+    private void addElapsedDuration() {
+        long elapsed = (System.currentTimeMillis() - JMeterContextService.getTestStartTime()) / 1000;
+        addFilteredJSON("ElapsedDuration", elapsed);
     }
 
     /**

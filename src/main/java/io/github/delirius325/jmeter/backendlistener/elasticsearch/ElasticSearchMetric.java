@@ -172,7 +172,6 @@ public class ElasticSearchMetric {
         addFilteredJSON("ElapsedDuration", elapsed);
     }
 
-
     /**
      * Methods that add all custom fields added by the user in the Backend Listener's GUI panel
      *

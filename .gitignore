@@ -49,3 +49,6 @@ buildNumber.properties
 *.iml
 *.sh
 /bin/
+
+# VSCode
+.vscode

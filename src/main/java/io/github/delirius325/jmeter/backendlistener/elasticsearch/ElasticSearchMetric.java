@@ -72,14 +72,14 @@ public class ElasticSearchMetric {
         addFilteredJSON("BodySize", this.sampleResult.getBodySizeAsLong());
         addFilteredJSON("Bytes", this.sampleResult.getBytesAsLong());
         addFilteredJSON("SentBytes", this.sampleResult.getSentBytes());
-        addFilteredJSON("ConnectTime", this.sampleResult.getConnectTime());
+        addFilteredJSON("ConnectTime_ms", this.sampleResult.getConnectTime());
         addFilteredJSON("ContentType", this.sampleResult.getContentType());
         addFilteredJSON("DataType", this.sampleResult.getDataType());
         addFilteredJSON("ErrorCount", this.sampleResult.getErrorCount());
         addFilteredJSON("GrpThreads", this.sampleResult.getGroupThreads());
         addFilteredJSON("IdleTime", this.sampleResult.getIdleTime());
-        addFilteredJSON("Latency", this.sampleResult.getLatency());
-        addFilteredJSON("ResponseTime", this.sampleResult.getTime());
+        addFilteredJSON("Latency_ms", this.sampleResult.getLatency());
+        addFilteredJSON("LoadTime_ms", this.sampleResult.getTime());
         addFilteredJSON("SampleCount", this.sampleResult.getSampleCount());
         addFilteredJSON("SampleLabel", this.sampleResult.getSampleLabel());
         addFilteredJSON("ThreadName", this.sampleResult.getThreadName());
@@ -108,8 +108,8 @@ public class ElasticSearchMetric {
         }
 
         addAssertions();
-        addElapsedTime();
-        addElapsedDuration();
+        addElapsedTimeSinceMidnight();
+        addElapsedDurationSinceStart();
         addCustomFields(context);
         parseHeadersAsJsonProps(this.allReqHeaders, this.allResHeaders);
 
@@ -144,11 +144,11 @@ public class ElasticSearchMetric {
     }
 
     /**
-     * This method adds the ElapsedTime as a key:value pair in the JSON object. Also, depending on whether or not the
-     * tests were launched from a CI tool (i.e Jenkins), it will add a hard-coded version of the ElapsedTime for results
+     * This method adds the ElapsedTimeSinceMidnight as a key:value pair in the JSON object. Also, depending on whether or not the
+     * tests were launched from a CI tool (i.e Jenkins), it will add a hard-coded version of the ElapsedTimeSinceMidnight for results
      * comparison purposes
      */
-    private void addElapsedTime() {
+    private void addElapsedTimeSinceMidnight() {
         Date elapsedTime;
 
         if (this.ciBuildNumber != 0) {
@@ -161,15 +161,15 @@ public class ElasticSearchMetric {
 
         elapsedTime = getElapsedTime(false);
         if (elapsedTime != null)
-            addFilteredJSON("ElapsedTime", elapsedTime.getTime());
+            addFilteredJSON("ElapsedTimeSinceMidnight_ms", elapsedTime.getTime());
     }
 
     /**
-     * This method adds the ElapsedDuration in seconds.
+     * This method adds the ElapsedDurationSinceStart in seconds.
      */
-    private void addElapsedDuration() {
+    private void addElapsedDurationSinceStart() {
         long elapsed = (System.currentTimeMillis() - JMeterContextService.getTestStartTime()) / 1000;
-        addFilteredJSON("ElapsedDuration", elapsed);
+        addFilteredJSON("ElapsedDurationSinceStart_sec", elapsed);
     }
 
     /**
